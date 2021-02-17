@@ -1,0 +1,20 @@
+{
+  "name": "EugeneErg/ClassCreator",
+  "description": "description",
+  "minimum-stability": "stable",
+  "authors": [
+    {
+      "name": "Eugene",
+      "email": "evilli6eral@gmail.com"
+    }
+  ],
+  "license": "MIT",
+  "require": {
+    "php": ">=7.4"
+  },
+  "autoload": {
+    "psr-4": {
+      "EugeneErg\\ClassCreator\\": "src/"
+    }
+  }
+}
