@@ -64,14 +64,17 @@ final class DependencyInjector
             && method_exists($function[0], $function[1])
         ) {
             $method = new ReflectionMethod(...$function);
-
-            return $method->invokeArgs(
-                $method->isStatic() || is_object($function[0]) ? $function[0] : $this->create($function[0]),
-                Converter::instance()->convertArgumentsAccordingToParameters(
-                    $arguments,
-                    $method->getParameters()
-                )
+            $parameters = Converter::instance()->convertArgumentsAccordingToParameters(
+                $arguments,
+                $method->getParameters()
             );
+
+            return $method->isStatic()
+                ? call_user_func_array($function, $parameters)
+                : $method->invokeArgs(
+                    is_object($function[0]) ? $function[0] : $this->create($function[0]),
+                    $parameters
+                );
         }
 
         $method = new ReflectionFunction(Closure::fromCallable($function));
