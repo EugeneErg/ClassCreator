@@ -87,8 +87,11 @@ final class Converter
         return isset($this->converters[$from][$type]);
     }
 
-    public function convertArgumentsAccordingToParameters(array $arguments, array $parameters): array
-    {
+    public function convertArgumentsAccordingToParameters(
+        array $arguments,
+        array $parameters,
+        ?string $self = null
+    ): array {
         $result = [];
 
         foreach (array_reverse($parameters) as $number => $parameter) {
@@ -104,6 +107,11 @@ final class Converter
             }
 
             $types = $this->getAllTypes($parameter->hasType() ? $parameter->getType() : null);
+            $pos = $self === null ? false : array_search('self', $types, true);
+
+            if ($pos !== false) {
+                $types[$pos] = $self;
+            }
 
             if ($exists) {
                 $values = is_array($value) && $parameter->isVariadic() ? array_reverse($value) : [$value];
@@ -213,7 +221,8 @@ final class Converter
                     : $class->newInstanceArgs(
                         Converter::instance()->convertArgumentsAccordingToParameters(
                             $arguments ?? [],
-                            $constructor->getParameters()
+                            $constructor->getParameters(),
+                            $to
                         )
                     );
             };

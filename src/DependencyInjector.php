@@ -63,10 +63,20 @@ final class DependencyInjector
             && (is_string($function[0]) || is_object($function[0]))
             && method_exists($function[0], $function[1])
         ) {
+            if ($function[0] instanceof Closure) {
+                $reflectionFunction = new ReflectionFunction($function[0]);
+                $reflectionClass = $reflectionFunction->getClosureScopeClass();
+
+                if ($reflectionClass !== null) {
+                    $self = $reflectionClass->getName();
+                }
+            }
+
             $method = new ReflectionMethod(...$function);
             $parameters = Converter::instance()->convertArgumentsAccordingToParameters(
                 $arguments,
-                $method->getParameters()
+                $method->getParameters(),
+                $self ?? null
             );
 
             return $method->isStatic()
