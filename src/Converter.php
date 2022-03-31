@@ -51,6 +51,10 @@ final class Converter
 
     public function convert(array $types, $value = null)
     {
+        if (is_callable($value) && in_array('callable', $types, true)) {
+            return $value;
+        }
+
         $type = gettype($value);
 
         if (in_array($type, $types, true)) {
