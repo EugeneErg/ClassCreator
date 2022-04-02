@@ -19,12 +19,10 @@ final class DependencyInjector
 
     public function create(string $className, array $arguments = []): object
     {
-        return $className === Converter::class
-            ? $this->converter
-            : $this->converter->convert([$className], $arguments);
+        return $this->converter->convert([$className], $arguments);
     }
 
-    public function singleton(string $className, ?string $callback = null): void
+    public function singleton(string $className, $callback = null): void
     {
         if ($callback === null) {
             $callback = $this->converter->getConverterMethod('NULL', $className);
