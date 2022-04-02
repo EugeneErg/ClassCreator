@@ -19,18 +19,7 @@ final class Converter
     private const TYPE_MAP = [
         'int' => 'integer',
     ];
-
-    private static ?self $instance = null;
     private array $converters = [];
-
-    public static function instance(): self
-    {
-        if (!isset(self::$instance)) {
-            self::$instance = new self();
-        }
-
-        return self::$instance;
-    }
 
     /** @param callable $callback */
     public function register($callback, ?string $to = null): void

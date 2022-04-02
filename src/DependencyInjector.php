@@ -10,29 +10,27 @@ use ReflectionMethod;
 
 final class DependencyInjector
 {
-    private static ?self $instance = null;
+    private Converter $converter;
 
-    public static function instance(): self
+    public function __construct(Converter $converter)
     {
-        if (!isset(self::$instance)) {
-            self::$instance = new self();
-        }
-
-        return self::$instance;
+        $this->converter = $converter;
     }
 
     public function create(string $className, array $arguments = []): object
     {
-        return Converter::instance()->convert([$className], $arguments);
+        return $className === Converter::class
+            ? $this->converter
+            : $this->converter->convert([$className], $arguments);
     }
 
     public function singleton(string $className, ?string $callback = null): void
     {
         if ($callback === null) {
-            $callback = Converter::instance()->getConverterMethod('NULL', $className);
+            $callback = $this->converter->getConverterMethod('NULL', $className);
         }
 
-        Converter::instance()->register(function (?array $arguments = []) use ($callback) {
+        $this->converter->register(function (?array $arguments = []) use ($callback) {
             static $result;
 
             if (!empty($arguments)) {
@@ -73,7 +71,7 @@ final class DependencyInjector
             }
 
             $method = new ReflectionMethod(...$function);
-            $parameters = Converter::instance()->convertArgumentsAccordingToParameters(
+            $parameters = $this->converter->convertArgumentsAccordingToParameters(
                 $arguments,
                 $method->getParameters(),
                 $self ?? null
@@ -90,7 +88,7 @@ final class DependencyInjector
         $method = new ReflectionFunction(Closure::fromCallable($function));
 
         return $method->invokeArgs(
-            Converter::instance()->convertArgumentsAccordingToParameters(
+            $this->converter->convertArgumentsAccordingToParameters(
                 $arguments,
                 $method->getParameters()
             )
