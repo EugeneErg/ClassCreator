@@ -11,23 +11,8 @@ use ReflectionMethod;
 final class DependencyInjector
 {
     private Converter $converter;
-    private static ?self $instance = null;
 
-    public static function instance(): self
-    {
-        if (!isset(self::$instance)) {
-            self::$instance = new self(new Converter());
-        }
-
-        return self::$instance;
-    }
-
-    public function forgetInstance(): void
-    {
-        self::$instance = null;
-    }
-
-    private function __construct(Converter $converter)
+    public function __construct(Converter $converter)
     {
         $this->converter = $converter;
     }
