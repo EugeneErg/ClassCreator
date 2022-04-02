@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Tests;
 
-use EugeneErg\ClassCreator\Converter;
 use EugeneErg\ClassCreator\DependencyInjector;
 use PHPUnit\Framework\TestCase;
 
