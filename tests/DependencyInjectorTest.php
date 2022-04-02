@@ -12,15 +12,15 @@ final class DependencyInjectorTest extends TestCase
 {
     public function testCreate(): void
     {
-        $dependencyInjector = new DependencyInjector(new Converter());
-        $actual = $dependencyInjector->create(TestClass::class, ['value' => 2]);
+        $actual = DependencyInjector::instance()->create(TestClass::class, ['value' => 2]);
+        DependencyInjector::instance()->forgetInstance();
         $this->assertInstanceOf(TestClass::class, $actual);
     }
 
     public function testCall(): void
     {
-        $dependencyInjector = new DependencyInjector(new Converter());
-        $actual = $dependencyInjector->call([TestClass2::class, 'getValue'], ['power' => 2]);
+        $actual = DependencyInjector::instance()->call([TestClass2::class, 'getValue'], ['power' => 2]);
+        DependencyInjector::instance()->forgetInstance();
         $this->assertEquals(20, $actual);
     }
 }
