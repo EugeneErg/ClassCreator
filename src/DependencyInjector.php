@@ -15,11 +15,12 @@ final class DependencyInjector
     public function __construct()
     {
         $this->converter = new Converter($this);
+        $this->singleton(DependencyInjector::class, fn() => $this);
     }
 
     public function create(string $className, array $arguments = []): object
     {
-        return $className === self::class ? $this : $this->converter->convert([$className], $arguments);
+        return $this->converter->convert([$className], $arguments);
     }
 
     public function singleton(string $className, $callback = null): void
