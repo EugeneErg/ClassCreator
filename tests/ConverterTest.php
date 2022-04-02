@@ -5,13 +5,14 @@ declare(strict_types=1);
 namespace Tests;
 
 use EugeneErg\ClassCreator\Converter;
+use EugeneErg\ClassCreator\DependencyInjector;
 use PHPUnit\Framework\TestCase;
 
 final class ConverterTest extends TestCase
 {
     public function testRegisterIntToArray(): void
     {
-        $converter = new Converter();
+        $converter = (new DependencyInjector)->create(Converter::class);
         $converter->register(function (int $value): array {
             return array_fill(0, $value, null);
         });
@@ -20,7 +21,7 @@ final class ConverterTest extends TestCase
 
     public function testRegisterArrayToInt(): void
     {
-        $converter = new Converter();
+        $converter = (new DependencyInjector)->create(Converter::class);
         $converter->register(function (array $value): int {
             return count($value);
         });
@@ -29,7 +30,7 @@ final class ConverterTest extends TestCase
 
     public function testRegisterStringToInt(): void
     {
-        $converter = new Converter();
+        $converter = (new DependencyInjector)->create(Converter::class);
         $converter->register(function (string $value): int {
             return strlen($value);
         });
@@ -38,7 +39,7 @@ final class ConverterTest extends TestCase
 
     public function testRegisterIntToString(): void
     {
-        $converter = new Converter();
+        $converter = (new DependencyInjector)->create(Converter::class);
         $converter->register(function (int $value): string {
             return str_repeat(' ', $value);
         });
@@ -47,7 +48,7 @@ final class ConverterTest extends TestCase
 
     public function testRegisterNullToClass(): void
     {
-        $converter = new Converter();
+        $converter = (new DependencyInjector)->create(Converter::class);
         $converter->register(function (): TestClass2 {
             return new TestClass2();
         });
@@ -56,7 +57,7 @@ final class ConverterTest extends TestCase
 
     public function testRegisterNullToClass2(): void
     {
-        $converter = new Converter();
+        $converter = (new DependencyInjector)->create(Converter::class);
         $converter->register(function () use ($converter): TestClass {
             return new TestClass(
                 $converter->convert([TestClass2::class]),

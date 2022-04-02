@@ -20,6 +20,12 @@ final class Converter
         'int' => 'integer',
     ];
     private array $converters = [];
+    private DependencyInjector $dependencyInjector;
+
+    public function __construct(DependencyInjector $dependencyInjector)
+    {
+        $this->dependencyInjector = $dependencyInjector;
+    }
 
     /** @param callable $callback */
     public function register($callback, ?string $to = null): void
@@ -70,7 +76,7 @@ final class Converter
             $callback = $this->getClassCallback($types);
         }
 
-        return DependencyInjector::instance()->call($callback, [$value]);
+        return $this->dependencyInjector->call($callback, [$value]);
     }
 
     public function canConvert(string $type, $value = null): bool
@@ -115,7 +121,7 @@ final class Converter
             }
 
             foreach ($values as $value) {
-                $result[] = Converter::instance()->convert($types, $value);
+                $result[] = $this->convert($types, $value);
             }
         }
 
@@ -212,7 +218,7 @@ final class Converter
                 return $constructor === null
                     ? new $to()
                     : $class->newInstanceArgs(
-                        Converter::instance()->convertArgumentsAccordingToParameters(
+                        $this->convertArgumentsAccordingToParameters(
                             $arguments ?? [],
                             $constructor->getParameters(),
                             $to
