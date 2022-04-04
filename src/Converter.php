@@ -93,7 +93,7 @@ final class Converter
     ): array {
         $result = [];
 
-        foreach (array_reverse($parameters) as $number => $parameter) {
+        foreach (array_reverse($parameters, true) as $number => $parameter) {
             /** @var ReflectionParameter $parameter */
             $name = $parameter->getName();
             $value = $arguments[$name] ?? $arguments[$number] ?? null;
