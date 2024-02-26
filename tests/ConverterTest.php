@@ -21,7 +21,7 @@ final class ConverterTest extends TestCase
 
     public function testRegisterArrayToInt(): void
     {
-        $converter = (new DependencyInjector)->create(Converter::class);
+        $converter = $this->getConverter();
         $converter->register(function (array $value): int {
             return count($value);
         });
@@ -30,7 +30,7 @@ final class ConverterTest extends TestCase
 
     public function testRegisterStringToInt(): void
     {
-        $converter = (new DependencyInjector)->create(Converter::class);
+        $converter = $this->getConverter();
         $converter->register(function (string $value): int {
             return strlen($value);
         });
@@ -65,5 +65,20 @@ final class ConverterTest extends TestCase
             );
         });
         $this->assertEquals(new TestClass(new TestClass2(), 1), $converter->convert([TestClass::class]));
+    }
+
+    public function testCreateClass(): void
+    {
+        $actual = (new DependencyInjector)->create(TestClass3::class, ['value' => 999]);
+
+        $this->assertEquals(new TestClass3(999), $actual);
+    }
+
+    private function getConverter(): Converter
+    {
+        /** @var Converter $result */
+        $result = (new DependencyInjector)->create(Converter::class);
+
+        return $result;
     }
 }

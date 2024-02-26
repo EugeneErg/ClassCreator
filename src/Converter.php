@@ -19,6 +19,7 @@ final class Converter
     private const TYPE_MAP = [
         'int' => 'integer',
     ];
+    /** @var Closure[][] */
     private array $converters = [];
     private DependencyInjector $dependencyInjector;
 
@@ -27,7 +28,12 @@ final class Converter
         $this->dependencyInjector = $dependencyInjector;
     }
 
-    /** @param callable $callback */
+    /**
+     * @param callable|array $callback
+     * @param string|null $to
+     * @return void
+     * @throws ReflectionException
+     */
     public function register($callback, ?string $to = null): void
     {
         $reflectionMethod = $this->getReflection($callback);
@@ -40,8 +46,29 @@ final class Converter
         }
 
         foreach ($types as $from) {
-            $this->converters[self::TYPE_MAP[$from] ?? $from][$to] = $callback;
+            $this->converters[self::TYPE_MAP[$from] ?? $from][$to]
+                = fn ($value = null) => $this->dependencyInjector->call($callback, [$value]);
         }
+    }
+
+    public function registerClass(string $className, $callback = null, bool $singleton = true): void
+    {
+        $callback ??= $this->getConverterMethod('NULL', $className);
+        $this->converters['NULL'][$className] = $singleton === false ? function (?array $arguments = []) use ($callback) {
+            return $this->dependencyInjector->call($callback, $arguments);
+        } : function (?array $arguments = []) use ($callback) {
+            static $result;
+
+            if (!empty($arguments)) {
+                return $this->dependencyInjector->call($callback, $arguments);
+            }
+
+            if (!isset($result)) {
+                $result = $this->dependencyInjector->call($callback);
+            }
+
+            return $result;
+        };
     }
 
     public function convert(array $types, $value = null)
@@ -56,7 +83,7 @@ final class Converter
             return $value;
         }
 
-        if (is_object($value)) {
+        if ($type === 'object') {
             foreach ($types as $type) {
                 if ($value instanceof $type) {
                     return $value;
@@ -72,11 +99,11 @@ final class Converter
         $callbacks = array_intersect_key(array_merge($byType, $byClass), array_flip($types));
         $callback = reset($callbacks);
 
-        if ($callback === false && (is_array($value) || is_null($value))) {
+        if ($callback === false && ($type === 'array' || $type === 'NULL')) {
             $callback = $this->getClassCallback($types);
         }
 
-        return $this->dependencyInjector->call($callback, [$value]);
+        return $callback($value);
     }
 
     public function canConvert(string $type, $value = null): bool
@@ -86,6 +113,12 @@ final class Converter
         return isset($this->converters[$from][$type]);
     }
 
+    /**
+     * @param array $arguments
+     * @param ReflectionParameter[] $parameters
+     * @param string|null $self
+     * @return array
+     */
     public function convertArgumentsAccordingToParameters(
         array $arguments,
         array $parameters,
@@ -94,7 +127,6 @@ final class Converter
         $result = [];
 
         foreach (array_reverse($parameters, true) as $number => $parameter) {
-            /** @var ReflectionParameter $parameter */
             $name = $parameter->getName();
             $value = $arguments[$name] ?? $arguments[$number] ?? null;
             $exists = array_key_exists($name, $arguments) || array_key_exists($number, $arguments);
@@ -194,8 +226,7 @@ final class Converter
             $result = $this->getConverterMethod('NULL', $type);
 
             if ($result !== null) {
-                $this->converters['NULL'][$type] = $result;
-                $this->converters['array'][$type] = $result;
+                $this->converters['array'][$type] = $this->converters['NULL'][$type] = $result;
             }
 
             return $result;

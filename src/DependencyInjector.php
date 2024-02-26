@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace EugeneErg\ClassCreator;
 
 use Closure;
+use ReflectionException;
 use ReflectionFunction;
 use ReflectionMethod;
 
@@ -15,7 +16,8 @@ final class DependencyInjector
     public function __construct()
     {
         $this->converter = new Converter($this);
-        $this->singleton(DependencyInjector::class, fn() => $this);
+        $this->converter->registerClass(Converter::class, fn() => $this->converter);
+        $this->converter->registerClass(DependencyInjector::class, fn() => $this);
     }
 
     public function create(string $className, array $arguments = []): object
@@ -23,27 +25,12 @@ final class DependencyInjector
         return $this->converter->convert([$className], $arguments);
     }
 
-    public function singleton(string $className, $callback = null): void
-    {
-        if ($callback === null) {
-            $callback = $this->converter->getConverterMethod('NULL', $className);
-        }
-
-        $this->converter->register(function (?array $arguments = []) use ($callback) {
-            static $result;
-
-            if (!empty($arguments)) {
-                return $this->call($callback, $arguments);
-            }
-
-            if (!isset($result)) {
-                $result = $this->call($callback);
-            }
-
-            return $result;
-        }, $className);
-    }
-
+    /**
+     * @param $function
+     * @param array $arguments
+     * @return mixed
+     * @throws ReflectionException
+     */
     public function call($function, array $arguments = [])
     {
         if (
@@ -73,14 +60,14 @@ final class DependencyInjector
             $parameters = $this->converter->convertArgumentsAccordingToParameters(
                 $arguments,
                 $method->getParameters(),
-                $self ?? null
+                $self ?? null,
             );
 
             return $method->isStatic()
                 ? call_user_func_array($function, $parameters)
                 : $method->invokeArgs(
                     is_object($function[0]) ? $function[0] : $this->create($function[0]),
-                    $parameters
+                    $parameters,
                 );
         }
 
@@ -89,8 +76,8 @@ final class DependencyInjector
         return $method->invokeArgs(
             $this->converter->convertArgumentsAccordingToParameters(
                 $arguments,
-                $method->getParameters()
-            )
+                $method->getParameters(),
+            ),
         );
     }
 }
